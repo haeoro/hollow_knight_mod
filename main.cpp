@@ -12,27 +12,31 @@ ovh.feminine216@passinbox.com
 #include <vector>
 
 #define lInt unsigned long long int
-int pId = 3228;
+int pId = 4688;
+
+struct valueOffsets
+{
+	std::vector<lInt> moneyOffsets =
+	{
+		0x90, 0xE08, 0x88, 0x220,
+		0x18, 0x218, 0x1C4
+	};
+};
+
+struct moduleNames
+{
+};
 
 lInt buildMemoryAddr(lInt baseAddr) 
 {
-	std::vector<lInt> offsets = 
-	{
-		0x90, 
-		0xE08,
-		0x88,
-		0x220, 
-		0x18, 
-		0x218, 
-		0x1C4
-	};
+	offsets offset;
 	HANDLE mHandleVM = OpenProcess(
 		PROCESS_VM_READ,
 		FALSE,
 		pId
 	);
 	lInt newAddr = 0;
-	for (int i = 0; i < offsets.size(); i++) 
+	for (int i = 0; i < moneyOffsets.size(); i++) 
 	{
 		BOOL getTrueAddr = ReadProcessMemory
 		(
@@ -42,31 +46,29 @@ lInt buildMemoryAddr(lInt baseAddr)
 			sizeof(lInt),
 			NULL
 		);
-		baseAddr = newAddr + offsets[i];
+		baseAddr = newAddr + moneyOffsets[i];
 	}
-	lInt finalAddr = newAddr + offsets[offsets.size() - 1];
+	lInt finalAddr = newAddr + moneyOffsets[moneyOffsets.size() - 1];
 	return finalAddr;
 }
 
-void userInterface() 
+void userInterface(lInt baseAddr) 
 {
-	SMALL_RECT xyCords;
-	xyCords.Left = 222;
-	xyCords.Right = 222;
-	xyCords.Bottom = 222;
-	xyCords.Top = 222;
-	
-	HWND WINAPI cHandle = GetConsoleWindow();
-	BOOL WINAPI consoleWinInfo = SetConsoleWindowInfo
-	(
-		cHandle,
-		TRUE, 
-		&xyCords
-	);
-	std::cout << GetLastError();
-
-	//std::cout << "\tHollow Knight Patcher | Made by Datarec";
-
+	int userInputMain;
+	std::cout << "\tHollow Knight Patcher | Made by datarec";
+	std::cout << "\n\n\t* * * * * * * * * * * * * * * * * * * * *"
+		"\n\t*                                       *"
+		"\n\t*    1) Max Money                       *"
+		"\n\t*    2) Infinite                        *"
+		"\n\t*                                       *"
+		"\n\t*                                       *\n\n"
+		;
+	std::cout << "\t>> ";
+	std::cin >> userInputMain;
+	if (userInputMain == 1) 
+	{
+		buildMemoryAddr(baseAddr);
+	}
 }
 
 int main()
@@ -79,6 +81,11 @@ int main()
 		TH32CS_SNAPMODULE,
 		pId
 	);
+	if (GetLastError() == 87)
+	{
+		std::cout << "Invalid process ID.";
+		exit(1);
+	}
 	while (Module32Next(mHandle, &mInfo))
 	{
 		int mCheck = wcscmp(mInfo.szModule, module);
@@ -89,7 +96,5 @@ int main()
 		}
 	}
 	lInt baseAddr = (lInt)mInfo.modBaseAddr + 0x00497DE8;
-	userInterface();
-	//std::cout << std::hex << buildMemoryAddr(baseAddr);
-
+	userInterface(baseAddr);
 }

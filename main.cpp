@@ -12,7 +12,7 @@ ovh.feminine216@passinbox.com
 #include <vector>
 
 #define lInt unsigned long long int
-int pId = 4688;
+int pId = NULL;
 
 struct valueOffsets
 {
@@ -45,9 +45,9 @@ void patchValue(lInt finalAddr)
 		sizeof(int),
 		NULL
 	);
-	if (GetLastError() == 0) 
+	if (GetLastError() == 0 || GetLastError() == 6);
 	{
-		std::cout << "\n\n\tPatches applied!";
+		int pSuccess = MessageBox(NULL, L"Patches applied!", L"SUCCESS!", MB_OK);
 	}
 }
 
@@ -95,8 +95,31 @@ void userInterface(lInt baseAddr)
 	}
 }
 
-void getBaseAddr()
+void getPid()
 {
+	wchar_t processName[] = L"Hollow Knight.exe";
+	PROCESSENTRY32 pInfo;
+	pInfo.dwSize = sizeof(PROCESSENTRY32);
+	HANDLE pidHandle = CreateToolhelp32Snapshot
+	(
+		TH32CS_SNAPPROCESS, 
+		0
+	);
+	while (Process32Next(pidHandle, &pInfo))
+	{
+		int checkPidName = wcscmp(pInfo.szExeFile, processName);
+		if (checkPidName == 0) 
+		{
+			pId = pInfo.th32ProcessID;
+			CloseHandle(pidHandle);
+		}
+	}
+}
+
+int main()
+{
+	system("cls");
+	getPid();
 	moduleNames module;
 	MODULEENTRY32 mInfo;
 	mInfo.dwSize = sizeof(MODULEENTRY32);
@@ -107,7 +130,7 @@ void getBaseAddr()
 	);
 	if (GetLastError() == 87)
 	{
-		std::cout << "Invalid process ID.";
+		int pSuccess = MessageBox(NULL, L"Invalid Process ID.", NULL, MB_OK);
 		exit(1);
 	}
 	while (Module32Next(mHandle, &mInfo))
@@ -121,9 +144,5 @@ void getBaseAddr()
 	}
 	lInt baseAddr = (lInt)mInfo.modBaseAddr + 0x00497DE8;
 	userInterface(baseAddr);
-}
-
-int main()
-{
-	getBaseAddr();
+	main();
 }

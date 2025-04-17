@@ -25,18 +25,42 @@ struct valueOffsets
 
 struct moduleNames
 {
+	WCHAR moneyBase[20] = L"mono-2.0-bdwgc.dll";
 };
 
-lInt buildMemoryAddr(lInt baseAddr) 
+void patchValue(lInt finalAddr) 
 {
-	offsets offset;
+	int val = INT_MAX;
+	HANDLE wOpHandle = OpenProcess
+	(
+		PROCESS_VM_WRITE | PROCESS_VM_OPERATION,
+		FALSE, 
+		pId
+	);
+	BOOL writeOperation = WriteProcessMemory
+	(
+		wOpHandle, 
+		(LPVOID)finalAddr,
+		(LPCVOID)&val,
+		sizeof(int),
+		NULL
+	);
+	if (GetLastError() == 0) 
+	{
+		std::cout << "\n\n\tPatches applied!";
+	}
+}
+
+void buildMemoryAddr(lInt baseAddr) 
+{
+	valueOffsets offset;
 	HANDLE mHandleVM = OpenProcess(
 		PROCESS_VM_READ,
 		FALSE,
 		pId
 	);
 	lInt newAddr = 0;
-	for (int i = 0; i < moneyOffsets.size(); i++) 
+	for (int i = 0; i < offset.moneyOffsets.size(); i++) 
 	{
 		BOOL getTrueAddr = ReadProcessMemory
 		(
@@ -46,10 +70,10 @@ lInt buildMemoryAddr(lInt baseAddr)
 			sizeof(lInt),
 			NULL
 		);
-		baseAddr = newAddr + moneyOffsets[i];
+		baseAddr = newAddr + offset.moneyOffsets[i];
 	}
-	lInt finalAddr = newAddr + moneyOffsets[moneyOffsets.size() - 1];
-	return finalAddr;
+	lInt finalAddr = newAddr + offset.moneyOffsets[offset.moneyOffsets.size() - 1];
+	patchValue(finalAddr);
 }
 
 void userInterface(lInt baseAddr) 
@@ -71,9 +95,9 @@ void userInterface(lInt baseAddr)
 	}
 }
 
-int main()
+void getBaseAddr()
 {
-	WCHAR module[] = L"mono-2.0-bdwgc.dll";
+	moduleNames module;
 	MODULEENTRY32 mInfo;
 	mInfo.dwSize = sizeof(MODULEENTRY32);
 	HANDLE mHandle = CreateToolhelp32Snapshot
@@ -88,7 +112,7 @@ int main()
 	}
 	while (Module32Next(mHandle, &mInfo))
 	{
-		int mCheck = wcscmp(mInfo.szModule, module);
+		int mCheck = wcscmp(mInfo.szModule, module.moneyBase);
 		if (mCheck == 0)
 		{
 			CloseHandle(mHandle);
@@ -97,4 +121,9 @@ int main()
 	}
 	lInt baseAddr = (lInt)mInfo.modBaseAddr + 0x00497DE8;
 	userInterface(baseAddr);
+}
+
+int main()
+{
+	getBaseAddr();
 }

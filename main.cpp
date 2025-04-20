@@ -117,7 +117,7 @@ void getBaseAddr()
 	);
 	if (GetLastError() == 87)
 	{
-		int pSuccess = MessageBox(NULL, L"Invalid Process ID.", NULL, MB_OK);
+		int pSuccess = MessageBox(NULL, L"Invalid Process ID.", NULL, MB_ICONERROR);
 		exit(1);
 	}
 
@@ -160,7 +160,7 @@ void getPid()
 	}
 	if (foundPid == 0) 
 	{
-		MessageBox(NULL, L"Game is not open.", NULL, NULL);
+		MessageBox(NULL, L"Game is not open.", NULL, MB_ICONERROR);
 		return;
 	}
 	getBaseAddr();

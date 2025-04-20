@@ -17,10 +17,25 @@ int pId = NULL;
 lInt moneyLocation = 0x00497DE8;
 short userSelection;
 
+void menuOfItems() 
+{
+	std::cout << "\tHollow Knight Patcher | Made by datarec";
+	std::cout << "\n\n\t* * * * * * * * * * * * * * * * * * * * *"
+		"\n\t*                                       *"
+		"\n\t*    1) Set Currency                    *"
+		"\n\t*    2) Infinite Health                 *"
+		"\n\t*                                       *"
+		"\n\t*                                       *\n\n";
+}
+
 void patchValue(lInt baseAddr) 
 {
-	//std::cout << std::hex << baseAddr;
-	int val = INT_MAX;
+	system("cls");
+	menuOfItems();
+	int val;
+	std::cout << "\tSETCURRENCY> ";
+	std::cin >> val;
+
 	HANDLE wOpHandle = OpenProcess
 	(
 		PROCESS_VM_WRITE | PROCESS_VM_OPERATION,
@@ -37,7 +52,7 @@ void patchValue(lInt baseAddr)
 	);
 	if (GetLastError() == 0 || GetLastError() == 6)
 	{
-		int pSuccess = MessageBox(NULL, L"Patch successful! \n\n~ Inf Currency", L"SUCCESS!", MB_OK);
+		int pSuccess = MessageBox(NULL, L"Patch successful!", L"Information", MB_ICONINFORMATION);
 	}
 	std::cout << GetLastError();
 }
@@ -72,10 +87,7 @@ void buildMemoryAddr(lInt baseAddr)
 		);
 		baseAddr = newAddr + moneyOffsets[i];
 	}
-	//std::cout << GetLastError();
-	// IMPORTANT TO REMOVE COMMENT
 	baseAddr = newAddr + moneyOffsets[moneyOffsets.size() - 1];
-	std::cout << std::hex << baseAddr << std::endl;
 	patchValue(baseAddr);
 }
 
@@ -158,14 +170,7 @@ int main()
 {
 	system("cls");
 	int userInputMain;
-	std::cout << "\tHollow Knight Patcher | Made by datarec";
-	std::cout << "\n\n\t* * * * * * * * * * * * * * * * * * * * *"
-		"\n\t*                                       *"
-		"\n\t*    1) Set Currency                    *"
-		"\n\t*    2) Infinite Health                 *"
-		"\n\t*                                       *"
-		"\n\t*                                       *\n\n"
-		;
+	menuOfItems();
 	std::cout << "\t>> ";
 	std::cin >> userInputMain;
 	userSelection = userInputMain;

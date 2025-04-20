@@ -9,70 +9,58 @@ ovh.feminine216@passinbox.com
 #include <iostream> 
 #include <windows.h> 
 #include <tlhelp32.h> 
-#include <vector> 
+#include <vector>
 
 #define lInt unsigned long long int
 
-struct baseInfo
-{
-	int pId = 0;
-	int baseAddr = 0; 
-	int valueModifySelection = 0;
-};
+int pId = NULL;
+lInt moneyLocation = 0x00497DE8;
+short userSelection;
 
-struct memoryLocation 
+void patchValue(lInt baseAddr) 
 {
-	lInt moneyLocation = 0x00497DE8;
-};
-
-struct valueOffsets
-{
-	std::vector<lInt> moneyOffsets =
-	{
-		0x90, 0xE08, 0x88, 0x220,
-		0x18, 0x218, 0x1C4
-	};
-};
-
-struct moduleNames
-{
-	WCHAR moneyBase[20] = L"mono-2.0-bdwgc.dll";
-};
-
-void patchValue(lInt finalAddr) 
-{
+	//std::cout << std::hex << baseAddr;
 	int val = INT_MAX;
 	HANDLE wOpHandle = OpenProcess
 	(
 		PROCESS_VM_WRITE | PROCESS_VM_OPERATION,
 		FALSE, 
-		333 // DEBUG
+		pId 
 	);
 	BOOL writeOperation = WriteProcessMemory
 	(
 		wOpHandle, 
-		(LPVOID)finalAddr,
+		(LPVOID)baseAddr,
 		(LPCVOID)&val,
 		sizeof(int),
 		NULL
 	);
-	if (GetLastError() == 0 || GetLastError() == 6);
+	if (GetLastError() == 0 || GetLastError() == 6)
 	{
 		int pSuccess = MessageBox(NULL, L"Patch successful! \n\n~ Inf Currency", L"SUCCESS!", MB_OK);
 	}
+	std::cout << GetLastError();
 }
 
 void buildMemoryAddr(lInt baseAddr) 
 {
-	baseInfo bInfo;
-	valueOffsets offset;
+	std::vector<lInt> moneyOffsets =
+	{
+		0x90, 
+		0xE08,
+		0x88,
+		0x220,
+		0x18,
+		0x218,
+		0x1C4
+	};
 	HANDLE mHandleVM = OpenProcess(
 		PROCESS_VM_READ,
 		FALSE,
-		bInfo.pId
+		pId
 	);
 	lInt newAddr = 0;
-	for (int i = 0; i < offset.moneyOffsets.size(); i++) 
+	for (int i = 0; i < moneyOffsets.size(); i++) 
 	{
 		BOOL getTrueAddr = ReadProcessMemory
 		(
@@ -82,15 +70,93 @@ void buildMemoryAddr(lInt baseAddr)
 			sizeof(lInt),
 			NULL
 		);
-		baseAddr = newAddr + offset.moneyOffsets[i];
+		baseAddr = newAddr + moneyOffsets[i];
 	}
-	lInt finalAddr = newAddr + offset.moneyOffsets[offset.moneyOffsets.size() - 1];
-	patchValue(finalAddr);
+	//std::cout << GetLastError();
+	// IMPORTANT TO REMOVE COMMENT
+	baseAddr = newAddr + moneyOffsets[moneyOffsets.size() - 1];
+	std::cout << std::hex << baseAddr << std::endl;
+	patchValue(baseAddr);
 }
 
-int userInterface() 
+void resolveBaseAddress(wchar_t baseModuleName[], HANDLE mHandle)
 {
-	baseInfo bInfo;
+	MODULEENTRY32 mInfo;
+	mInfo.dwSize = sizeof(MODULEENTRY32);
+	while (Module32Next(mHandle, &mInfo))
+	{
+		int mCheck = wcscmp(mInfo.szModule, baseModuleName);
+		if (mCheck == 0)
+		{
+			CloseHandle(mHandle);
+			break;
+		}
+	}
+	lInt baseAddr = (lInt)mInfo.modBaseAddr + moneyLocation;
+	buildMemoryAddr(baseAddr);
+}
+
+void getBaseAddr() 
+{
+	HANDLE mHandle = CreateToolhelp32Snapshot
+	(
+		TH32CS_SNAPMODULE,
+		pId
+	);
+	if (GetLastError() == 87)
+	{
+		int pSuccess = MessageBox(NULL, L"Invalid Process ID.", NULL, MB_OK);
+		exit(1);
+	}
+
+	// call the resolve function with the TRUE basemodname
+
+	if (userSelection == 1) 
+	{
+		wchar_t baseModuleName[] = L"mono-2.0-bdwgc.dll";
+		resolveBaseAddress(baseModuleName, mHandle);
+	}
+	else if (userSelection == 2) 
+	{
+		// parse through values in accordance to health, not currency.
+		std::cout << "FUck, not available to user yet.";
+		exit(1);
+	}
+}
+
+void getPid()
+{
+	int foundPid = 0;
+	wchar_t processName[] = L"Hollow Knight.exe";
+	PROCESSENTRY32 pInfo;
+	pInfo.dwSize = sizeof(PROCESSENTRY32);
+	HANDLE pidHandle = CreateToolhelp32Snapshot
+	(
+		TH32CS_SNAPPROCESS,
+		0
+	);
+	while (Process32Next(pidHandle, &pInfo))
+	{
+		int checkPidName = wcscmp(pInfo.szExeFile, processName);
+		if (checkPidName == 0)
+		{
+			pId = pInfo.th32ProcessID;
+			foundPid = 1;
+			CloseHandle(pidHandle);
+			break;
+		}
+	}
+	if (foundPid == 0) 
+	{
+		MessageBox(NULL, L"Game is not open.", NULL, NULL);
+		return;
+	}
+	getBaseAddr();
+}
+
+int main()
+{
+	system("cls");
 	int userInputMain;
 	std::cout << "\tHollow Knight Patcher | Made by datarec";
 	std::cout << "\n\n\t* * * * * * * * * * * * * * * * * * * * *"
@@ -102,75 +168,7 @@ int userInterface()
 		;
 	std::cout << "\t>> ";
 	std::cin >> userInputMain;
-	if (userInputMain == 1) 
-	{
-		bInfo.valueModifySelection = userInputMain;
-	}
-	else if (userInputMain == 2) 
-	{
-		bInfo.valueModifySelection = userInputMain;
-	}
-}
-
-void getPid()
-{
-	baseInfo bInfo;
-	wchar_t processName[] = L"Hollow Knight.exe";
-	PROCESSENTRY32 pInfo;
-	pInfo.dwSize = sizeof(PROCESSENTRY32);
-	HANDLE pidHandle = CreateToolhelp32Snapshot
-	(
-		TH32CS_SNAPPROCESS, 
-		0
-	);
-	while (Process32Next(pidHandle, &pInfo))
-	{
-		int checkPidName = wcscmp(pInfo.szExeFile, processName);
-		if (checkPidName == 0) 
-		{
-			bInfo.pId = pInfo.th32ProcessID;
-			CloseHandle(pidHandle);
-		}
-	}
-}
-
-void getBaseAddr() 
-{
-	memoryLocation mLocation;
-	baseInfo bInfo;
-	moduleNames module;
-	MODULEENTRY32 mInfo;
-	mInfo.dwSize = sizeof(MODULEENTRY32);
-	HANDLE mHandle = CreateToolhelp32Snapshot
-	(
-		TH32CS_SNAPMODULE,
-		bInfo.pId
-	);
-	if (GetLastError() == 87)
-	{
-		int pSuccess = MessageBox(NULL, L"Invalid Process ID.", NULL, MB_OK);
-		exit(1);
-	}
-	if (bInfo.valueModifySelection == 1) 
-	{
-		while (Module32Next(mHandle, &mInfo))
-		{
-			int mCheck = wcscmp(mInfo.szModule, module.moneyBase);
-			if (mCheck == 0)
-			{
-				CloseHandle(mHandle);
-				break;
-			}
-		}
-		lInt baseAddr = (lInt)mInfo.modBaseAddr + mLocation.moneyLocation;
-	}
-}
-
-int main()
-{
-	system("cls");
+	userSelection = userInputMain;
 	getPid();
-	userInterface();
-	
 	main();
 }

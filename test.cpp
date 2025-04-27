@@ -19,7 +19,7 @@ lInt healthLocation = 0x019D4478;
 short userSelection;
 lInt baseAddrGlob = 0;
 
-void menuOfItems() 
+void menuOfItems()
 {
 	std::cout << "\tHollow Knight Patcher | Made by datarec";
 	std::cout << "\n\n\t* * * * * * * * * * * * * * * * * * * * *"
@@ -30,7 +30,7 @@ void menuOfItems()
 		"\n\t*                                       *\n\n";
 }
 
-void patchValue() 
+void patchValue()
 {
 	system("cls");
 	menuOfItems();
@@ -40,12 +40,12 @@ void patchValue()
 	HANDLE wOpHandle = OpenProcess
 	(
 		PROCESS_VM_WRITE | PROCESS_VM_OPERATION,
-		FALSE, 
-		pId 
+		FALSE,
+		pId
 	);
 	BOOL writeOperation = WriteProcessMemory
 	(
-		wOpHandle, 
+		wOpHandle,
 		(LPVOID)baseAddrGlob,
 		(LPCVOID)&val,
 		sizeof(int),
@@ -58,27 +58,28 @@ void patchValue()
 	std::cout << GetLastError();
 }
 
-void buildMemoryAddr(lInt baseAddr) 
+void buildMemoryAddr(lInt baseAddr)
 {
+	exit(1);
 	std::vector<lInt> moneyOffsets =
 	{
-		0x90, 
-		0xE08, 
+		0x90,
+		0xE08,
 		0x88,
-		0x220, 
-		0x18, 
+		0x220,
+		0x18,
 		0x218,
 		0x1C4
 	};
-	std::vector<lInt> healthOffsets = 
+	std::vector<lInt> healthOffsets =
 	{
-		0xEE0, 0xE70, 0x128, 
+		0xEE0, 0xE70, 0x128,
 		0x70,0x28, 0x28,
 		0x190
 	};
 	HANDLE mHandleVM = OpenProcess(PROCESS_VM_READ, FALSE, pId);
 	lInt newAddr = 0;
-	for (int i = 0; i < moneyOffsets.size(); i++) 
+	for (int i = 0; i < moneyOffsets.size() - 1; i++)
 	{
 		BOOL getTrueAddr = ReadProcessMemory
 		(
@@ -88,21 +89,22 @@ void buildMemoryAddr(lInt baseAddr)
 			sizeof(lInt),
 			NULL
 		);
-		switch (userSelection) 
+		switch (userSelection)
 		{
-			case 1:
-				baseAddr = newAddr + moneyOffsets[i];
-				std::cout << std::hex << newAddr << std::endl;
-			case 2:
-				baseAddr = newAddr + healthOffsets[i];
-				std::cout << std::hex << newAddr << std::endl;
+		case 1:
+			baseAddr = newAddr + moneyOffsets[i];
+			//std::cout << std::hex << newAddr << std::endl;
+		case 2:
+			baseAddr = newAddr + healthOffsets[i];
+			//std::cout << std::hex << newAddr << std::endl;
 		}
 	}
-	switch (userSelection) 
+	switch (userSelection)
 	{
 	case 1:
 		baseAddrGlob = newAddr + moneyOffsets[moneyOffsets.size() - 1];
-		exit(1); 
+		std::cout << std::hex << baseAddrGlob;
+		exit(1);
 		patchValue();
 	case 2:
 		baseAddrGlob = newAddr + healthOffsets[healthOffsets.size() - 1];
@@ -125,19 +127,19 @@ void resolveBaseAddress(wchar_t baseModuleName[], HANDLE mHandle)
 			break;
 		}
 	}
-	if (userSelection == 1) 
+	if (userSelection == 1)
 	{
 		lInt baseAddr = (lInt)mInfo.modBaseAddr + moneyLocation;
 		buildMemoryAddr(baseAddr);
 	}
-	else if (userSelection == 2) 
+	else if (userSelection == 2)
 	{
 		lInt baseAddr = (lInt)mInfo.modBaseAddr + healthLocation;
 		buildMemoryAddr(baseAddr);
 	}
 }
 
-void getBaseAddr()  
+void getBaseAddr()
 {
 	HANDLE mHandle = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pId);
 	if (GetLastError() == 87)
@@ -145,12 +147,12 @@ void getBaseAddr()
 		int pSuccess = MessageBox(NULL, L"Invalid Process ID.", NULL, MB_ICONERROR);
 		exit(1);
 	}
-	if (userSelection == 1) 
+	if (userSelection == 1)
 	{
 		wchar_t baseModuleName[] = L"mono-2.0-bdwgc.dll";
 		resolveBaseAddress(baseModuleName, mHandle);
 	}
-	else if (userSelection == 2) 
+	else if (userSelection == 2)
 	{
 		wchar_t baseModuleName[] = L"UnityPlayer.dll";
 		resolveBaseAddress(baseModuleName, mHandle);
@@ -179,7 +181,7 @@ void getPid()
 			break;
 		}
 	}
-	if (foundPid == 0) 
+	if (foundPid == 0)
 	{
 		MessageBox(NULL, L"Game is not open.", NULL, MB_ICONERROR);
 		return;

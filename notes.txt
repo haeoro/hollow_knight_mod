@@ -1,0 +1,2 @@
+so, i was thinking maybe do an if statement to check if it goes below a specific number? That way i wouldn't have to introduce c++
+threading to the application, however I probably will have to once i implement gui functionality. 

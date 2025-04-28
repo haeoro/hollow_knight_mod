@@ -14,7 +14,7 @@ ovh.feminine216@passinbox.com
 #define lInt unsigned long long int
 
 int pId = NULL;
-lInt moneyLocation = 0x00497DE8;
+lInt memoryLocation = 0;
 short userSelection;
 
 void menuOfItems()
@@ -69,6 +69,16 @@ void buildMemoryAddr(lInt baseAddr)
 		0x218,
 		0x1C4
 	};
+	std::vector<lInt> healthOffsets =
+	{
+		0xE00,
+		0x940,
+		0x128,
+		0x70,
+		0x28,
+		0x28,
+		0x190
+	};
 	HANDLE mHandleVM = OpenProcess(
 		PROCESS_VM_READ,
 		FALSE,
@@ -85,9 +95,16 @@ void buildMemoryAddr(lInt baseAddr)
 			sizeof(lInt),
 			NULL
 		);
-
-		baseAddr = newAddr + moneyOffsets[i];
-		std::cout << std::hex << baseAddr << std::endl;
+		if (userSelection == 1) 
+		{
+			baseAddr = newAddr + moneyOffsets[i];
+			//std::cout << std::hex << baseAddr << std::endl;
+		}
+		else if (userSelection == 2) 
+		{
+			baseAddr = newAddr + healthOffsets[i];
+			//std::cout << std::hex << baseAddr << std::endl;
+		}
 	}
 	patchValue(baseAddr);
 }
@@ -105,7 +122,7 @@ void resolveBaseAddress(wchar_t baseModuleName[], HANDLE mHandle)
 			break;
 		}
 	}
-	lInt baseAddr = (lInt)mInfo.modBaseAddr + moneyLocation;
+	lInt baseAddr = (lInt)mInfo.modBaseAddr + memoryLocation;
 	buildMemoryAddr(baseAddr);
 }
 
@@ -127,13 +144,14 @@ void getBaseAddr()
 	if (userSelection == 1)
 	{
 		wchar_t baseModuleName[] = L"mono-2.0-bdwgc.dll";
+		memoryLocation = 0x00497DE8;
 		resolveBaseAddress(baseModuleName, mHandle);
 	}
 	else if (userSelection == 2)
 	{
-		// parse through values in accordance to health, not currency.
-		std::cout << "FUck, not available to user yet.";
-		exit(1);
+		wchar_t baseModuleName[] = L"UnityPlayer.dll";
+		memoryLocation = 0x019D4478;
+		resolveBaseAddress(baseModuleName, mHandle);
 	}
 }
 

@@ -17,7 +17,7 @@ int pId = NULL;
 lInt moneyLocation = 0x00497DE8;
 short userSelection;
 
-void menuOfItems() 
+void menuOfItems()
 {
 	std::cout << "\tHollow Knight Patcher | Made by datarec";
 	std::cout << "\n\n\t* * * * * * * * * * * * * * * * * * * * *"
@@ -28,7 +28,7 @@ void menuOfItems()
 		"\n\t*                                       *\n\n";
 }
 
-void patchValue(lInt baseAddr) 
+void patchValue(lInt baseAddr)
 {
 	system("cls");
 	menuOfItems();
@@ -39,12 +39,12 @@ void patchValue(lInt baseAddr)
 	HANDLE wOpHandle = OpenProcess
 	(
 		PROCESS_VM_WRITE | PROCESS_VM_OPERATION,
-		FALSE, 
-		pId 
+		FALSE,
+		pId
 	);
 	BOOL writeOperation = WriteProcessMemory
 	(
-		wOpHandle, 
+		wOpHandle,
 		(LPVOID)baseAddr,
 		(LPCVOID)&val,
 		sizeof(int),
@@ -57,11 +57,11 @@ void patchValue(lInt baseAddr)
 	std::cout << GetLastError();
 }
 
-void buildMemoryAddr(lInt baseAddr) 
+void buildMemoryAddr(lInt baseAddr)
 {
 	std::vector<lInt> moneyOffsets =
 	{
-		0x90, 
+		0x90,
 		0xE08,
 		0x88,
 		0x220,
@@ -75,7 +75,7 @@ void buildMemoryAddr(lInt baseAddr)
 		pId
 	);
 	lInt newAddr = 0;
-	for (int i = 0; i < moneyOffsets.size(); i++) 
+	for (int i = 0; i < moneyOffsets.size(); i++)
 	{
 		BOOL getTrueAddr = ReadProcessMemory
 		(
@@ -85,9 +85,10 @@ void buildMemoryAddr(lInt baseAddr)
 			sizeof(lInt),
 			NULL
 		);
+
 		baseAddr = newAddr + moneyOffsets[i];
+		std::cout << std::hex << baseAddr << std::endl;
 	}
-	baseAddr = newAddr + moneyOffsets[moneyOffsets.size() - 1];
 	patchValue(baseAddr);
 }
 
@@ -108,7 +109,7 @@ void resolveBaseAddress(wchar_t baseModuleName[], HANDLE mHandle)
 	buildMemoryAddr(baseAddr);
 }
 
-void getBaseAddr() 
+void getBaseAddr()
 {
 	HANDLE mHandle = CreateToolhelp32Snapshot
 	(
@@ -123,12 +124,12 @@ void getBaseAddr()
 
 	// call the resolve function with the TRUE basemodname
 
-	if (userSelection == 1) 
+	if (userSelection == 1)
 	{
 		wchar_t baseModuleName[] = L"mono-2.0-bdwgc.dll";
 		resolveBaseAddress(baseModuleName, mHandle);
 	}
-	else if (userSelection == 2) 
+	else if (userSelection == 2)
 	{
 		// parse through values in accordance to health, not currency.
 		std::cout << "FUck, not available to user yet.";
@@ -158,7 +159,7 @@ void getPid()
 			break;
 		}
 	}
-	if (foundPid == 0) 
+	if (foundPid == 0)
 	{
 		MessageBox(NULL, L"Game is not open.", NULL, MB_ICONERROR);
 		return;

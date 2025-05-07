@@ -13,7 +13,7 @@ ovh.feminine216@passinbox.com
 
 #define lInt unsigned long long int
 
-int pId = NULL;
+int pId = 0;
 lInt memoryLocation = 0;
 short userSelection;
 
@@ -23,19 +23,13 @@ void menuOfItems()
 	std::cout << "\n\n\t* * * * * * * * * * * * * * * * * * * * *"
 		"\n\t*                                       *"
 		"\n\t*    1) Set Currency                    *"
-		"\n\t*    2) Infinite Health                 *"
+		"\n\t*    2) Set Health                      *"
 		"\n\t*                                       *"
 		"\n\t*                                       *\n\n";
 }
 
-void patchValue(lInt baseAddr)
+void patchValue(lInt baseAddr, int inputVal)
 {
-	system("cls");
-	menuOfItems();
-	int val;
-	std::cout << "\tSETCURRENCY> ";
-	std::cin >> val;
-
 	HANDLE wOpHandle = OpenProcess
 	(
 		PROCESS_VM_WRITE | PROCESS_VM_OPERATION,
@@ -46,15 +40,45 @@ void patchValue(lInt baseAddr)
 	(
 		wOpHandle,
 		(LPVOID)baseAddr,
-		(LPCVOID)&val,
+		(LPCVOID)&inputVal,
 		sizeof(int),
 		NULL
 	);
 	if (GetLastError() == 0 || GetLastError() == 6)
 	{
-		int pSuccess = MessageBox(NULL, L"Patch successful!", L"Information", MB_ICONINFORMATION);
+		int pSuccess = MessageBox(NULL, "Patch successful!", "Information", MB_ICONINFORMATION);
 	}
 	std::cout << GetLastError();
+}
+
+void enterValue(lInt baseAddr) 
+{
+	int inputVal;
+	if (userSelection == 1) 
+	{
+    do 
+    {
+    	system("cls");
+    	menuOfItems();
+    	std::cout << "\tSETCURRENCY$ ";
+    	std::cin >> inputVal;
+    }
+    while (inputVal < 1 || inputVal > 2147483647);
+	}
+	else if (userSelection == 2) 
+	{
+		do 
+		{
+			system("cls");
+			menuOfItems();
+			std::cout << "\tSETHEALTH$ ";
+			std::cin >> inputVal;
+		}
+		while (inputVal < 1 || inputVal > 2147483645);
+	}
+	std::cout << inputVal;
+	exit(1);
+	patchValue(baseAddr, inputVal - 1);
 }
 
 void buildMemoryAddr(lInt baseAddr)
@@ -98,24 +122,22 @@ void buildMemoryAddr(lInt baseAddr)
 		if (userSelection == 1) 
 		{
 			baseAddr = newAddr + moneyOffsets[i];
-			//std::cout << std::hex << baseAddr << std::endl;
 		}
 		else if (userSelection == 2) 
 		{
 			baseAddr = newAddr + healthOffsets[i];
-			//std::cout << std::hex << baseAddr << std::endl;
 		}
 	}
-	patchValue(baseAddr);
+	enterValue(baseAddr);
 }
 
-void resolveBaseAddress(wchar_t baseModuleName[], HANDLE mHandle)
+void resolveBaseAddress(char baseModuleName[], HANDLE mHandle)
 {
 	MODULEENTRY32 mInfo;
 	mInfo.dwSize = sizeof(MODULEENTRY32);
 	while (Module32Next(mHandle, &mInfo))
 	{
-		int mCheck = wcscmp(mInfo.szModule, baseModuleName);
+		int mCheck = strcmp(mInfo.szModule, baseModuleName);
 		if (mCheck == 0)
 		{
 			CloseHandle(mHandle);
@@ -135,7 +157,7 @@ void getBaseAddr()
 	);
 	if (GetLastError() == 87)
 	{
-		int pSuccess = MessageBox(NULL, L"Invalid Process ID.", NULL, MB_ICONERROR);
+		int pSuccess = MessageBox(NULL, "Invalid Process ID.", NULL, MB_ICONERROR);
 		exit(1);
 	}
 
@@ -143,13 +165,13 @@ void getBaseAddr()
 
 	if (userSelection == 1)
 	{
-		wchar_t baseModuleName[] = L"mono-2.0-bdwgc.dll";
+		char baseModuleName[] = "mono-2.0-bdwgc.dll";
 		memoryLocation = 0x00497DE8;
 		resolveBaseAddress(baseModuleName, mHandle);
 	}
 	else if (userSelection == 2)
 	{
-		wchar_t baseModuleName[] = L"UnityPlayer.dll";
+		char baseModuleName[] = "UnityPlayer.dll";
 		memoryLocation = 0x019D4478;
 		resolveBaseAddress(baseModuleName, mHandle);
 	}
@@ -158,7 +180,7 @@ void getBaseAddr()
 void getPid()
 {
 	int foundPid = 0;
-	wchar_t processName[] = L"Hollow Knight.exe";
+        char processName[] = "Hollow Knight.exe";
 	PROCESSENTRY32 pInfo;
 	pInfo.dwSize = sizeof(PROCESSENTRY32);
 	HANDLE pidHandle = CreateToolhelp32Snapshot
@@ -168,7 +190,7 @@ void getPid()
 	);
 	while (Process32Next(pidHandle, &pInfo))
 	{
-		int checkPidName = wcscmp(pInfo.szExeFile, processName);
+		int checkPidName = strcmp(pInfo.szExeFile, processName);
 		if (checkPidName == 0)
 		{
 			pId = pInfo.th32ProcessID;
@@ -179,7 +201,7 @@ void getPid()
 	}
 	if (foundPid == 0)
 	{
-		MessageBox(NULL, L"Game is not open.", NULL, MB_ICONERROR);
+		MessageBox(NULL, "Game is not open.", NULL, MB_ICONERROR);
 		return;
 	}
 	getBaseAddr();

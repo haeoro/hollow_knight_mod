@@ -2,6 +2,7 @@
 Hollow Knight cheat featuring the following,
 
 Infinite Money ( Custom )
+Infinite Health
 
 ovh.feminine216@passinbox.com
 --------------------------------------------------------------------*/

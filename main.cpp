@@ -78,8 +78,7 @@ void enterValue(lInt baseAddr)
 		while (inputVal < 1 || inputVal > 2147483645);
 	}
 	std::cout << inputVal;
-	exit(1);
-	patchValue(baseAddr, inputVal - 1);
+	patchValue(baseAddr, inputVal);
 }
 
 void buildMemoryAddr(lInt baseAddr)

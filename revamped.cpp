@@ -16,7 +16,7 @@ ovh.feminine216@passinbox.com
 
 lInt memoryLocation = 0;
 
-struct moduleName
+struct moduleData
 {
 	int moneyAddress = 0x00497DE8;
 	int healthAddress = 0x019D4478;
@@ -24,7 +24,7 @@ struct moduleName
 	std::string healthModule = "UnityPlayer.dll";
 };
 
-void patchValue(lInt baseAddr, int inputVal)
+void patchValue(lInt baseAddr, int inputVal, int pId)
 {
 	HANDLE wOpHandle = OpenProcess
 	(
@@ -47,7 +47,7 @@ void patchValue(lInt baseAddr, int inputVal)
 	std::cout << GetLastError();
 }
 
-void enterValue(lInt baseAddr) 
+DWORD enterValue(int userSelection) 
 {
 	int inputVal;
 	if (userSelection == 1) 
@@ -64,10 +64,10 @@ void enterValue(lInt baseAddr)
 		std::cin >> inputVal;
 	}
 	std::cout << inputVal;
-	patchValue(baseAddr, inputVal);
+	return inputVal;
 }
 
-void buildMemoryAddr(uintptr_t baseAddr)
+uintptr_t buildMemoryAddr(uintptr_t baseAddr, int pId, int userSelection)
 {
 	std::vector<lInt> moneyOffsets =
 	{
@@ -116,13 +116,13 @@ void buildMemoryAddr(uintptr_t baseAddr)
 			baseAddr = newAddr + healthOffsets[i];
 		}
 	}
-	enterValue(baseAddr);
+	return baseAddr;
 }
 
 // Use a pointer to struct to get the baseModuleName.
 // Dependencies include, PID, baseModuleName
 
-uintptr_t resolveBaseAddress(int pid, char* baseModuleName)
+uintptr_t resolveBaseAddress(int pid, const char* baseModuleName)
 {
 
 	HANDLE mHandle = CreateToolhelp32Snapshot
@@ -135,7 +135,7 @@ uintptr_t resolveBaseAddress(int pid, char* baseModuleName)
 	mInfo.dwSize = sizeof(MODULEENTRY32);
 	while (Module32Next(mHandle, &mInfo))
 	{
-		int mCheck = strcmp(mInfo.szModule, *baseModuleName);
+		int mCheck = strcmp(mInfo.szModule, baseModuleName);
 		if (mCheck == 0)
 		{
 			CloseHandle(mHandle);
@@ -193,14 +193,22 @@ int menuOfItems()
 
 int main()
 {	
-	struct moduleName modules;
-	struct moduleName *ptrModules = modules;
+	struct moduleData modules;
+	struct moduleData *ptrModules = modules;
 	system("cls");
 	int selection = menuOfItems();
 	int pId = getPid();
-	switch (selection)
+
+	if (selection == 1) 
 	{
-		case 1: uintptr_t baseAddr = resolveBaseAddress(pId, ptrModules->moneyModule);
-		case 2: uintptr_t baseAddr = resolveBaseAddress(pId, ptrModules->healthModule);
+		uintptr_t baseAddr = resolveBaseAddress(pId, ptrModules->moneyModule);
+	} 
+	else if (selection == 2) 
+	{
+		uintptr_t baseAddr = resolveBaseAddress(pId, ptrModules->healthModule);
 	}
+
+	uintptr_t memoryAddr = buildMemoryAddr(baseAddr, pId, userSelection);
+	int value = enterValue(selection);
+	patchValue(memoryAddr, inputVal, pId);
 }

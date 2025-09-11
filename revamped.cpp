@@ -1,3 +1,4 @@
+
 /*--------------------------------------------------------------------
 Hollow Knight cheat featuring the following,
 
@@ -15,6 +16,12 @@ ovh.feminine216@passinbox.com
 #define lInt unsigned long long int
 
 lInt memoryLocation = 0;
+
+class baseOffsets 
+{
+private:
+
+};
 
 struct moduleData
 {
@@ -47,17 +54,17 @@ void patchValue(lInt baseAddr, int inputVal, int pId)
 	std::cout << GetLastError();
 }
 
-DWORD enterValue(int userSelection) 
+DWORD enterValue(int userSelection)
 {
 	int inputVal;
-	if (userSelection == 1) 
+	if (userSelection == 1)
 	{
-    	system("cls");
-    	std::cout << "\tSETCURRENCY$ ";
-    	std::cin >> inputVal;
-    	std::cout << inputVal;
-    }
-	else if (userSelection == 2) 
+		system("cls");
+		std::cout << "\tSETCURRENCY$ ";
+		std::cin >> inputVal;
+		std::cout << inputVal;
+	}
+	else if (userSelection == 2)
 	{
 		system("cls");
 		std::cout << "\tSETHEALTH$ ";
@@ -107,11 +114,11 @@ uintptr_t buildMemoryAddr(uintptr_t baseAddr, int pId, int userSelection)
 			sizeof(lInt),
 			NULL
 		);
-		if (userSelection == 1) 
+		if (userSelection == 1)
 		{
 			baseAddr = newAddr + moneyOffsets[i];
 		}
-		else if (userSelection == 2) 
+		else if (userSelection == 2)
 		{
 			baseAddr = newAddr + healthOffsets[i];
 		}
@@ -149,7 +156,7 @@ uintptr_t resolveBaseAddress(int pid, const char* baseModuleName)
 DWORD getPid()
 {
 	int foundPid = 0;
-    char processName[] = "Hollow Knight.exe";
+	char processName[] = "Hollow Knight.exe";
 	PROCESSENTRY32 pInfo;
 	pInfo.dwSize = sizeof(PROCESSENTRY32);
 	HANDLE pidHandle = CreateToolhelp32Snapshot
@@ -162,7 +169,7 @@ DWORD getPid()
 		int checkPidName = strcmp(pInfo.szExeFile, processName);
 		if (checkPidName == 0)
 		{
-		
+
 
 			CloseHandle(pidHandle);
 			break;
@@ -192,23 +199,29 @@ int menuOfItems()
 }
 
 int main()
-{	
+{
 	struct moduleData modules;
-	struct moduleData *ptrModules = modules;
-	system("cls");
+	struct moduleData* ptrModules = modules;
+	//system("cls");
 	int selection = menuOfItems();
 	int pId = getPid();
 
-	if (selection == 1) 
+	if (selection == 1)
 	{
+		// if it's equal to sel 1, get the base address of money mod using the start address. 
 		uintptr_t baseAddr = resolveBaseAddress(pId, ptrModules->moneyModule);
-	} 
-	else if (selection == 2) 
-	{
-		uintptr_t baseAddr = resolveBaseAddress(pId, ptrModules->healthModule);
+		uintptr_t memoryAddr = buildMemoryAddr(baseAddr, pId, userSelection);
+		int valueM = enterValue(selection);
+		patchValue(memoryAddr, valueM, pId);
 	}
+	else if (selection == 2)
+	{
 
-	uintptr_t memoryAddr = buildMemoryAddr(baseAddr, pId, userSelection);
-	int value = enterValue(selection);
-	patchValue(memoryAddr, inputVal, pId);
+		// if it's equal to sel 2, get the base address of health mod using the start address. 
+		uintptr_t baseAddr = resolveBaseAddress(pId, ptrModules->healthModule);
+		uintptr_t memoryAddr = buildMemoryAddr(baseAddr, pId, userSelection);
+		int valueH = enterValue(selection);
+		patchValue(memoryAddr, valueH, pId);
+	}
+	return 0;
 }

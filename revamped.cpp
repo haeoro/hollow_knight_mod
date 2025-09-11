@@ -1,11 +1,12 @@
-
 /*--------------------------------------------------------------------
+
 Hollow Knight cheat featuring the following,
 
 Infinite Money ( Custom )
 Infinite Health
 
 ovh.feminine216@passinbox.com
+
 --------------------------------------------------------------------*/
 
 #include <iostream> 
@@ -17,11 +18,25 @@ ovh.feminine216@passinbox.com
 
 lInt memoryLocation = 0;
 
-class baseOffsets 
+class baseOffsets
 {
 private:
+	int strtOffsetM;
+	int strtOffsetH;
+public:
+	// constructor assiging values.
+	baseOffsets()
+	{
+		strtOffsetM = 0x00497DE8;
+		strtOffsetH = 0x019D4478;
+	}
+	// create functions for building memory addresses using the start address and adding offsets. 
+	void buildMemoryAddr() 
+	{	
 
+	}
 };
+
 
 struct moduleData
 {
@@ -76,7 +91,7 @@ DWORD enterValue(int userSelection)
 
 uintptr_t buildMemoryAddr(uintptr_t baseAddr, int pId, int userSelection)
 {
-	std::vector<lInt> moneyOffsets =
+	std::vector<lInt> moneyOffsets = 
 	{
 		0x90,
 		0xE08,
@@ -156,7 +171,8 @@ uintptr_t resolveBaseAddress(int pid, const char* baseModuleName)
 DWORD getPid()
 {
 	int foundPid = 0;
-	char processName[] = "Hollow Knight.exe";
+	WCHAR* processName = new WCHAR;
+	processName = "Hollow Knight.exe";
 	PROCESSENTRY32 pInfo;
 	pInfo.dwSize = sizeof(PROCESSENTRY32);
 	HANDLE pidHandle = CreateToolhelp32Snapshot

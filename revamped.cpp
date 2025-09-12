@@ -18,32 +18,12 @@ ovh.feminine216@passinbox.com
 
 lInt memoryLocation = 0;
 
-class baseOffsets
-{
-private:
-	int strtOffsetM;
-	int strtOffsetH;
-public:
-	// constructor assiging values.
-	baseOffsets()
-	{
-		strtOffsetM = 0x00497DE8;
-		strtOffsetH = 0x019D4478;
-	}
-	// create functions for building memory addresses using the start address and adding offsets. 
-	void buildMemoryAddr() 
-	{	
-
-	}
-};
-
-
 struct moduleData
 {
-	int moneyAddress = 0x00497DE8;
-	int healthAddress = 0x019D4478;
-	std::string moneyModule = "mono-2.0-bdwgc.dll";
-	std::string healthModule = "UnityPlayer.dll";
+	int strtOffsetM = 0x00497DE8;
+	int strtOffsetH = 0x019D4478;
+	WCHAR baseModNameM[40] = L"mono-2.0-bdwgc.dll";
+	WCHAR baseModNameH[40] = L"UnityPlayer.dll";
 };
 
 void patchValue(lInt baseAddr, int inputVal, int pId)
@@ -64,7 +44,10 @@ void patchValue(lInt baseAddr, int inputVal, int pId)
 	);
 	if (GetLastError() == 0 || GetLastError() == 6)
 	{
-		int pSuccess = MessageBox(NULL, "Patch successful!", "Information", MB_ICONINFORMATION);
+		LPCTSTR successMsg = L"Patch successful!";
+		LPCTSTR infoMsg = L"Information";
+		
+		int pSuccess = MessageBox(NULL, successMsg, infoMsg, MB_ICONINFORMATION);
 	}
 	std::cout << GetLastError();
 }
@@ -91,7 +74,7 @@ DWORD enterValue(int userSelection)
 
 uintptr_t buildMemoryAddr(uintptr_t baseAddr, int pId, int userSelection)
 {
-	std::vector<lInt> moneyOffsets = 
+	std::vector<lInt> moneyOffsets =
 	{
 		0x90,
 		0xE08,
@@ -144,7 +127,7 @@ uintptr_t buildMemoryAddr(uintptr_t baseAddr, int pId, int userSelection)
 // Use a pointer to struct to get the baseModuleName.
 // Dependencies include, PID, baseModuleName
 
-uintptr_t resolveBaseAddress(int pid, const char* baseModuleName)
+uintptr_t resolveBaseAddress(int pid, WCHAR* baseModuleName)
 {
 
 	HANDLE mHandle = CreateToolhelp32Snapshot
@@ -157,7 +140,7 @@ uintptr_t resolveBaseAddress(int pid, const char* baseModuleName)
 	mInfo.dwSize = sizeof(MODULEENTRY32);
 	while (Module32Next(mHandle, &mInfo))
 	{
-		int mCheck = strcmp(mInfo.szModule, baseModuleName);
+		int mCheck = wcscmp(mInfo.szModule, baseModuleName);
 		if (mCheck == 0)
 		{
 			CloseHandle(mHandle);
@@ -171,8 +154,7 @@ uintptr_t resolveBaseAddress(int pid, const char* baseModuleName)
 DWORD getPid()
 {
 	int foundPid = 0;
-	WCHAR* processName = new WCHAR;
-	processName = "Hollow Knight.exe";
+	WCHAR processName[20] = L"Hollow Knight.exe";
 	PROCESSENTRY32 pInfo;
 	pInfo.dwSize = sizeof(PROCESSENTRY32);
 	HANDLE pidHandle = CreateToolhelp32Snapshot
@@ -182,18 +164,17 @@ DWORD getPid()
 	);
 	while (Process32Next(pidHandle, &pInfo))
 	{
-		int checkPidName = strcmp(pInfo.szExeFile, processName);
+		int checkPidName = wcscmp(pInfo.szExeFile, processName);
 		if (checkPidName == 0)
 		{
-
-
 			CloseHandle(pidHandle);
 			break;
 		}
 	}
 	if (foundPid == 0)
 	{
-		MessageBox(NULL, "Game is not open.", NULL, MB_ICONERROR);
+		LPCTSTR gameNotOpen = L"Game is not open.";
+		MessageBox(NULL, gameNotOpen, NULL, MB_ICONERROR);
 		return 1;
 	}
 	return pInfo.th32ProcessID;
@@ -217,25 +198,25 @@ int menuOfItems()
 int main()
 {
 	struct moduleData modules;
-	struct moduleData* ptrModules = modules;
-	//system("cls");
+	struct moduleData* ptrModules = &modules;
+
 	int selection = menuOfItems();
 	int pId = getPid();
 
 	if (selection == 1)
 	{
 		// if it's equal to sel 1, get the base address of money mod using the start address. 
-		uintptr_t baseAddr = resolveBaseAddress(pId, ptrModules->moneyModule);
-		uintptr_t memoryAddr = buildMemoryAddr(baseAddr, pId, userSelection);
+		uintptr_t baseAddr = resolveBaseAddress(pId, ptrModules->baseModNameM);
+		uintptr_t memoryAddr = buildMemoryAddr(baseAddr, pId, selection);
 		int valueM = enterValue(selection);
 		patchValue(memoryAddr, valueM, pId);
 	}
+
 	else if (selection == 2)
 	{
-
 		// if it's equal to sel 2, get the base address of health mod using the start address. 
-		uintptr_t baseAddr = resolveBaseAddress(pId, ptrModules->healthModule);
-		uintptr_t memoryAddr = buildMemoryAddr(baseAddr, pId, userSelection);
+		uintptr_t baseAddr = resolveBaseAddress(pId, ptrModules->baseModNameH);
+		uintptr_t memoryAddr = buildMemoryAddr(baseAddr, pId, selection);
 		int valueH = enterValue(selection);
 		patchValue(memoryAddr, valueH, pId);
 	}

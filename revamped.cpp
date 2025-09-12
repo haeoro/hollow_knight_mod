@@ -48,19 +48,18 @@ void patchValue(lInt baseAddr, int inputVal, int pId)
 		LPCTSTR infoMsg = L"Information";
 		
 		int pSuccess = MessageBox(NULL, successMsg, infoMsg, MB_ICONINFORMATION);
-	}
-	std::cout << GetLastError();
+	} 
+	std::cout << GetLastError() << std::endl;
 }
 
 DWORD enterValue(int userSelection)
 {
-	int inputVal;
+	int inputVal = 0;
 	if (userSelection == 1)
 	{
 		system("cls");
 		std::cout << "\tSETCURRENCY$ ";
 		std::cin >> inputVal;
-		std::cout << inputVal;
 	}
 	else if (userSelection == 2)
 	{
@@ -68,11 +67,10 @@ DWORD enterValue(int userSelection)
 		std::cout << "\tSETHEALTH$ ";
 		std::cin >> inputVal;
 	}
-	std::cout << inputVal;
 	return inputVal;
 }
 
-uintptr_t buildMemoryAddr(uintptr_t baseAddr, int pId, int userSelection)
+lInt buildMemoryAddr(lInt baseAddr, int pId, int selection)
 {
 	std::vector<lInt> moneyOffsets =
 	{
@@ -94,13 +92,11 @@ uintptr_t buildMemoryAddr(uintptr_t baseAddr, int pId, int userSelection)
 		0x28,
 		0x190
 	};
-
 	HANDLE mHandleVM = OpenProcess(
 		PROCESS_VM_READ,
 		FALSE,
 		pId
 	);
-
 	lInt newAddr = 0;
 	for (int i = 0; i < moneyOffsets.size(); i++)
 	{
@@ -112,11 +108,11 @@ uintptr_t buildMemoryAddr(uintptr_t baseAddr, int pId, int userSelection)
 			sizeof(lInt),
 			NULL
 		);
-		if (userSelection == 1)
+		if (selection == 1)
 		{
 			baseAddr = newAddr + moneyOffsets[i];
 		}
-		else if (userSelection == 2)
+		else if (selection == 2)
 		{
 			baseAddr = newAddr + healthOffsets[i];
 		}
@@ -147,14 +143,14 @@ uintptr_t resolveBaseAddress(int pid, WCHAR* baseModuleName)
 			break;
 		}
 	}
-	uintptr_t baseAddr = (lInt)mInfo.modBaseAddr + memoryLocation;
+	uintptr_t baseAddr = (lInt)mInfo.modBaseAddr;
 	return baseAddr;
 }
 
 DWORD getPid()
 {
 	int foundPid = 0;
-	WCHAR processName[20] = L"Hollow Knight.exe";
+	WCHAR processName[] = L"hollow_knight.exe";
 	PROCESSENTRY32 pInfo;
 	pInfo.dwSize = sizeof(PROCESSENTRY32);
 	HANDLE pidHandle = CreateToolhelp32Snapshot
@@ -167,6 +163,7 @@ DWORD getPid()
 		int checkPidName = wcscmp(pInfo.szExeFile, processName);
 		if (checkPidName == 0)
 		{
+			foundPid = 1;
 			CloseHandle(pidHandle);
 			break;
 		}
@@ -202,12 +199,17 @@ int main()
 
 	int selection = menuOfItems();
 	int pId = getPid();
+	if (pId == 1)
+	{
+		return 1;
+	}
 
 	if (selection == 1)
 	{
 		// if it's equal to sel 1, get the base address of money mod using the start address. 
-		uintptr_t baseAddr = resolveBaseAddress(pId, ptrModules->baseModNameM);
-		uintptr_t memoryAddr = buildMemoryAddr(baseAddr, pId, selection);
+		lInt baseAddr = resolveBaseAddress(pId, ptrModules->baseModNameM);
+		lInt memoryAddr = buildMemoryAddr(baseAddr, pId, selection);
+		//dbg stuff
 		int valueM = enterValue(selection);
 		patchValue(memoryAddr, valueM, pId);
 	}

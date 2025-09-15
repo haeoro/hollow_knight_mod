@@ -52,7 +52,7 @@ void patchValue(lInt baseAddr, int inputVal, int pId)
 	} 
 	else if (lastError == 998) 
 	{
-		MessageBox(0, L"Offsets are out of date or incorrect.", L"Error 998", 0);
+		MessageBox(0, L"Offsets are out of date or incorrect. Please wait for an update.", L"Error code: 998", 0);
 	}
 	std::cout << GetLastError() << std::endl;
 }
@@ -77,26 +77,17 @@ DWORD enterValue(int userSelection)
 
 lInt buildMemoryAddr(lInt baseAddr, int pId, int selection)
 {
-	std::vector<lInt> moneyOffsets =
-	{
-		0x90,
-		0xE08,
-		0x88,
-		0x220,
-		0x18,
-		0x218,
-		0x1C4
+	std::vector<lInt> moneyOffsets = {
+		0x90, 0xE08, 0x88, 0x220,
+		0x18, 0x218, 0x1C4
 	};
+
 	std::vector<lInt> healthOffsets =
 	{
-		0xE00,
-		0x940,
-		0x128,
-		0x70,
-		0x28,
-		0x28,
-		0x190
+		0xE00, 0x940, 0x128, 0x70,
+		0x28, 0x28, 0x190
 	};
+
 	HANDLE mHandleVM = OpenProcess(
 		PROCESS_VM_READ,
 		FALSE,

@@ -42,13 +42,18 @@ void patchValue(lInt baseAddr, int inputVal, int pId)
 		sizeof(int),
 		NULL
 	);
-	if (GetLastError() == 0 || GetLastError() == 6)
+	int lastError = GetLastError();
+	if (lastError == 0 || lastError == 6)
 	{
 		LPCTSTR successMsg = L"Patch successful!";
 		LPCTSTR infoMsg = L"Information";
 		
-		int pSuccess = MessageBox(NULL, successMsg, infoMsg, MB_ICONINFORMATION);
+		int pSuccess = MessageBox(0, successMsg, infoMsg, MB_ICONINFORMATION);
 	} 
+	else if (lastError == 998) 
+	{
+		MessageBox(0, L"Offsets are out of date or incorrect.", L"Error 998", 0);
+	}
 	std::cout << GetLastError() << std::endl;
 }
 

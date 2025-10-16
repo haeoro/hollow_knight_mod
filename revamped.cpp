@@ -47,10 +47,10 @@ void patchValue(lInt baseAddr, int inputVal, int pId)
 	{
 		LPCTSTR successMsg = L"Patch successful!";
 		LPCTSTR infoMsg = L"Information";
-		
+
 		int pSuccess = MessageBox(0, successMsg, infoMsg, MB_ICONINFORMATION);
-	} 
-	else if (lastError == 998) 
+	}
+	else if (lastError == 998)
 	{
 		MessageBox(0, L"Offsets are out of date or incorrect. Please wait for an update.", L"Error code: 998", 0);
 	}
@@ -188,35 +188,34 @@ int menuOfItems()
 	return selection;
 }
 
+int build(int pid, int selection, WCHAR module[])
+{
+	lInt baseAddr = resolveBaseAddress(pid, module);
+	lInt memoryAddr = buildMemoryAddr(baseAddr, pid, selection);
+	int value = enterValue(selection);
+	patchValue(memoryAddr, value, pid);
+	return 0;
+}
+
 int main()
 {
 	struct moduleData modules;
-	struct moduleData* ptrModules = &modules;
 
 	int selection = menuOfItems();
 	int pId = getPid();
+
 	if (pId == 1)
 	{
 		return 1;
 	}
-
-	if (selection == 1)
+	
+	switch (selection) 
 	{
-		// if it's equal to sel 1, get the base address of money mod using the start address. 
-		lInt baseAddr = resolveBaseAddress(pId, ptrModules->baseModNameM);
-		lInt memoryAddr = buildMemoryAddr(baseAddr, pId, selection);
-		//dbg stuff
-		int valueM = enterValue(selection);
-		patchValue(memoryAddr, valueM, pId);
-	}
-
-	else if (selection == 2)
-	{
-		// if it's equal to sel 2, get the base address of health mod using the start address. 
-		uintptr_t baseAddr = resolveBaseAddress(pId, ptrModules->baseModNameH);
-		uintptr_t memoryAddr = buildMemoryAddr(baseAddr, pId, selection);
-		int valueH = enterValue(selection);
-		patchValue(memoryAddr, valueH, pId);
+	case 1:
+		build(pId, selection, modules.baseModNameM);
+	
+	case 2:
+		build(pId, selection, modules.baseModNameH);
 	}
 	return 0;
 }

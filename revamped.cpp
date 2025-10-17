@@ -2,8 +2,8 @@
 
 Hollow Knight cheat featuring the following,
 
-Infinite Money ( Custom )
-Infinite Health
+Infinite Money ( Custom Value )
+Increased Health ( 998 Lives )
 
 ovh.feminine216@passinbox.com
 
@@ -116,10 +116,7 @@ lInt buildMemoryAddr(lInt baseAddr, int pId, int selection)
 	return baseAddr;
 }
 
-// Use a pointer to struct to get the baseModuleName.
-// Dependencies include, PID, baseModuleName
-
-uintptr_t resolveBaseAddress(int pid, WCHAR* baseModuleName)
+uintptr_t resolveBaseAddress(int pid, WCHAR baseModuleName[])
 {
 
 	HANDLE mHandle = CreateToolhelp32Snapshot

@@ -1,10 +1,12 @@
 /*--------------------------------------------------------------------
+
 Hollow Knight cheat featuring the following,
 
-Infinite Money ( Custom )
-Infinite Health
+Infinite Money ( Custom Value )
+Increased Health ( 998 Lives )
 
 ovh.feminine216@passinbox.com
+
 --------------------------------------------------------------------*/
 
 #include <iostream> 
@@ -14,22 +16,17 @@ ovh.feminine216@passinbox.com
 
 #define lInt unsigned long long int
 
-int pId = 0;
 lInt memoryLocation = 0;
-short userSelection;
 
-void menuOfItems()
+struct moduleData
 {
-	std::cout << "\tHollow Knight Patcher | Made by datarec";
-	std::cout << "\n\n\t* * * * * * * * * * * * * * * * * * * * *"
-		"\n\t*                                       *"
-		"\n\t*    1) Set Currency                    *"
-		"\n\t*    2) Set Health                      *"
-		"\n\t*                                       *"
-		"\n\t*                                       *\n\n";
-}
+	int strtOffsetM = 0x00497DE8;
+	int strtOffsetH = 0x019D4478;
+	WCHAR baseModNameM[40] = L"mono-2.0-bdwgc.dll";
+	WCHAR baseModNameH[40] = L"UnityPlayer.dll";
+};
 
-void patchValue(lInt baseAddr, int inputVal)
+void patchValue(lInt baseAddr, int inputVal, int pId)
 {
 	HANDLE wOpHandle = OpenProcess
 	(
@@ -45,64 +42,52 @@ void patchValue(lInt baseAddr, int inputVal)
 		sizeof(int),
 		NULL
 	);
-	if (GetLastError() == 0 || GetLastError() == 6)
+	int lastError = GetLastError();
+	if (lastError == 0 || lastError == 6)
 	{
-		int pSuccess = MessageBox(NULL, "Patch successful!", "Information", MB_ICONINFORMATION);
+		LPCTSTR successMsg = L"Patch successful!";
+		LPCTSTR infoMsg = L"Information";
+
+		int pSuccess = MessageBox(0, successMsg, infoMsg, MB_ICONINFORMATION);
 	}
-	std::cout << GetLastError();
+	else if (lastError == 998)
+	{
+		MessageBox(0, L"Offsets are out of date or incorrect. Please wait for an update.", L"Error code: 998", 0);
+	}
+	std::cout << GetLastError() << std::endl;
 }
 
-void enterValue(lInt baseAddr) 
+DWORD enterValue(int userSelection)
 {
-	int inputVal;
-	if (userSelection == 1) 
+	int inputVal = 0;
+	if (userSelection == 1)
 	{
-    do 
-    {
-    	system("cls");
-    	menuOfItems();
-    	std::cout << "\tSETCURRENCY$ ";
-    	std::cin >> inputVal;
-    }
-    while (inputVal < 1 || inputVal > 2147483647);
+		system("cls");
+		std::cout << "\tSETCURRENCY$ ";
+		std::cin >> inputVal;
 	}
-	else if (userSelection == 2) 
+	else if (userSelection == 2)
 	{
-		do 
-		{
-			system("cls");
-			menuOfItems();
-			std::cout << "\tSETHEALTH$ ";
-			std::cin >> inputVal;
-		}
-		while (inputVal < 1 || inputVal > 2147483645);
+		system("cls");
+		std::cout << "\tSETHEALTH$ ";
+		std::cin >> inputVal;
 	}
-	std::cout << inputVal;
-	patchValue(baseAddr, inputVal);
+	return inputVal;
 }
 
-void buildMemoryAddr(lInt baseAddr)
+lInt buildMemoryAddr(lInt baseAddr, int pId, int selection)
 {
-	std::vector<lInt> moneyOffsets =
-	{
-		0x90,
-		0xE08,
-		0x88,
-		0x220,
-		0x18,
-		0x218,
-		0x1C4
+	std::vector<lInt> moneyOffsets = {
+		0x90, 0xE08, 0x88, 0x220,
+		0x18, 0x218, 0x1C4
 	};
+
 	std::vector<lInt> healthOffsets =
 	{
-		0xE00,
-		0x940,
-		0x128,
-		0x70,
-		0x28,
-		0x28,
-		0x190
+		0xE00, 0x940, 0x128, 0x70,
+		0x28, 0x28, 0x190
 	};
+
 	HANDLE mHandleVM = OpenProcess(
 		PROCESS_VM_READ,
 		FALSE,
@@ -119,68 +104,46 @@ void buildMemoryAddr(lInt baseAddr)
 			sizeof(lInt),
 			NULL
 		);
-		if (userSelection == 1) 
+		if (selection == 1)
 		{
 			baseAddr = newAddr + moneyOffsets[i];
 		}
-		else if (userSelection == 2) 
+		else if (selection == 2)
 		{
 			baseAddr = newAddr + healthOffsets[i];
 		}
 	}
-	enterValue(baseAddr);
+	return baseAddr;
 }
 
-void resolveBaseAddress(char baseModuleName[], HANDLE mHandle)
+uintptr_t resolveBaseAddress(int pid, WCHAR baseModuleName[])
 {
+
+	HANDLE mHandle = CreateToolhelp32Snapshot
+	(
+		TH32CS_SNAPMODULE,
+		pid
+	);
+
 	MODULEENTRY32 mInfo;
 	mInfo.dwSize = sizeof(MODULEENTRY32);
 	while (Module32Next(mHandle, &mInfo))
 	{
-		int mCheck = strcmp(mInfo.szModule, baseModuleName);
+		int mCheck = wcscmp(mInfo.szModule, baseModuleName);
 		if (mCheck == 0)
 		{
 			CloseHandle(mHandle);
 			break;
 		}
 	}
-	lInt baseAddr = (lInt)mInfo.modBaseAddr + memoryLocation;
-	buildMemoryAddr(baseAddr);
+	uintptr_t baseAddr = (lInt)mInfo.modBaseAddr;
+	return baseAddr;
 }
 
-void getBaseAddr()
-{
-	HANDLE mHandle = CreateToolhelp32Snapshot
-	(
-		TH32CS_SNAPMODULE,
-		pId
-	);
-	if (GetLastError() == 87)
-	{
-		int pSuccess = MessageBox(NULL, "Invalid Process ID.", NULL, MB_ICONERROR);
-		exit(1);
-	}
-
-	// call the resolve function with the TRUE basemodname
-
-	if (userSelection == 1)
-	{
-		char baseModuleName[] = "mono-2.0-bdwgc.dll";
-		memoryLocation = 0x00497DE8;
-		resolveBaseAddress(baseModuleName, mHandle);
-	}
-	else if (userSelection == 2)
-	{
-		char baseModuleName[] = "UnityPlayer.dll";
-		memoryLocation = 0x019D4478;
-		resolveBaseAddress(baseModuleName, mHandle);
-	}
-}
-
-void getPid()
+DWORD getPid()
 {
 	int foundPid = 0;
-        char processName[] = "Hollow Knight.exe";
+	WCHAR processName[] = L"hollow_knight.exe";
 	PROCESSENTRY32 pInfo;
 	pInfo.dwSize = sizeof(PROCESSENTRY32);
 	HANDLE pidHandle = CreateToolhelp32Snapshot
@@ -190,10 +153,9 @@ void getPid()
 	);
 	while (Process32Next(pidHandle, &pInfo))
 	{
-		int checkPidName = strcmp(pInfo.szExeFile, processName);
+		int checkPidName = wcscmp(pInfo.szExeFile, processName);
 		if (checkPidName == 0)
 		{
-			pId = pInfo.th32ProcessID;
 			foundPid = 1;
 			CloseHandle(pidHandle);
 			break;
@@ -201,20 +163,56 @@ void getPid()
 	}
 	if (foundPid == 0)
 	{
-		MessageBox(NULL, "Game is not open.", NULL, MB_ICONERROR);
-		return;
+		LPCTSTR gameNotOpen = L"Game is not open.";
+		MessageBox(NULL, gameNotOpen, NULL, MB_ICONERROR);
+		return 1;
 	}
-	getBaseAddr();
+	return pInfo.th32ProcessID;
+}
+
+int menuOfItems()
+{
+	int selection;
+	std::cout << "\tHollow Knight Patcher | Made by datarec";
+	std::cout << "\n\n\t* * * * * * * * * * * * * * * * * * * * *"
+		"\n\t*                                       *"
+		"\n\t*    1) Set Currency                    *"
+		"\n\t*    2) Set Health                      *"
+		"\n\t*                                       *"
+		"\n\t*                                       *\n\n";
+	std::cout << "\t>> ";
+	std::cin >> selection;
+	return selection;
+}
+
+int build(int pid, int selection, WCHAR module[])
+{
+	lInt baseAddr = resolveBaseAddress(pid, module);
+	lInt memoryAddr = buildMemoryAddr(baseAddr, pid, selection);
+	int value = enterValue(selection);
+	patchValue(memoryAddr, value, pid);
+	return 0;
 }
 
 int main()
 {
-	system("cls");
-	int userInputMain;
-	menuOfItems();
-	std::cout << "\t>> ";
-	std::cin >> userInputMain;
-	userSelection = userInputMain;
-	getPid();
-	main();
+	struct moduleData modules;
+
+	int selection = menuOfItems();
+	int pId = getPid();
+
+	if (pId == 1)
+	{
+		return 1;
+	}
+	
+	switch (selection) 
+	{
+	case 1:
+		build(pId, selection, modules.baseModNameM);
+	
+	case 2:
+		build(pId, selection, modules.baseModNameH);
+	}
+	return 0;
 }

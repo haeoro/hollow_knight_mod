@@ -6,9 +6,7 @@ Program that makes modifications to the game Hollow Knight.
 2. Infinite health ((999 health) Must lose at least 1/5 health then you can enabled this.)
 
 # Notes 
-Offsets for the program are currently out of date. 
+Offsets for the program are currently out of date (program doesn't work). 
 
-Unfinished currently. However, I do plan to add more and improve the quality of the code as I continue to sharpen my C++ skills.  
+I wanted to build a GUI for this but haven't gotten around to doing it, and the offsets are out of date.
 
-Attempting to compile revamped.cpp will result in major syntax errors. I am reconstructing the program in revamped. If you intend to try this 
-program, please use main.cpp for now. 

@@ -10,3 +10,4 @@ Offsets for the program are currently out of date (program doesn't work).
 
 I wanted to build a GUI for this but haven't gotten around to doing it, and the offsets are out of date.
 
+Discontinued.
